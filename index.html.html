@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeCash | Banking Demo</title>
+<style>
+  :root {
+    --navy: #10264f;
+    --blue: #2864e8;
+    --pale: #eef4ff;
+    --ink: #18243a;
+    --muted: #738099;
+    --line: #e6ebf3;
+    --green: #13875b;
+    --red: #c84646;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f5f7fb; color: var(--ink); font-family: Inter, "Segoe UI", Arial, sans-serif; }
+  .demo-note { background: #fff4d8; color: #775512; text-align: center; padding: 9px 14px; font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+  .app { display: grid; grid-template-columns: 220px minmax(0,1fr); min-height: calc(100vh - 34px); max-width: 1400px; margin: 0 auto; }
+  aside { background: var(--navy); color: white; padding: 28px 16px; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 0 10px 32px; font-size: 23px; font-weight: 800; letter-spacing: -.7px; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 11px; background: #fff; color: var(--blue); display: grid; place-items: center; font-weight: 900; }
+  .nav-label { color: #a9b9da; font-size: 10px; text-transform: uppercase; letter-spacing: .14em; padding: 0 12px 10px; }
+  .nav { display: flex; flex-direction: column; gap: 6px; }
+  .nav button { border: 0; text-align: left; color: #dce6fa; background: transparent; padding: 12px; border-radius: 10px; font: inherit; cursor: pointer; }
+  .nav button.active, .nav button:hover { background: #244477; color: white; }
+  .side-bottom { margin-top: 40px; border-top: 1px solid #2d4269; padding: 18px 10px 0; color: #b8c6df; font-size: 12px; line-height: 1.5; }
+  main { padding: 30px clamp(18px, 3vw, 42px); min-width: 0; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 28px; }
+  .eyebrow { color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+  h1 { font-size: clamp(25px, 3vw, 34px); margin: 0; letter-spacing: -.9px; }
+  .profile { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+  .avatar { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #dce8ff; color: var(--navy); font-weight: 800; }
+  .profile strong { display: block; font-size: 13px; }
+  .profile small { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(260px,1fr); gap: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; box-shadow: 0 4px 18px rgba(22,48,92,.035); min-width: 0; }
+  .balance-card { color: white; border: 0; background: linear-gradient(125deg, #15356e, #2864e8); position: relative; overflow: hidden; min-height: 210px; }
+  .balance-card:after { content: ""; position: absolute; width: 210px; height: 210px; border: 1px solid rgba(255,255,255,.17); border-radius: 50%; right: -45px; top: -75px; box-shadow: 0 0 0 25px rgba(255,255,255,.04), 0 0 0 50px rgba(255,255,255,.03); }
+  .balance-label { color: #d7e4ff; font-size: 13px; }
+  .balance-amount { font-size: clamp(30px, 4vw, 42px); font-weight: 800; margin: 12px 0 22px; letter-spacing: -1.4px; }
+  .balance-footer { display: flex; justify-content: space-between; align-items: end; gap: 12px; color: #d7e4ff; font-size: 12px; position: relative; z-index: 1; }
+  .balance-footer strong { display: block; color: white; font-size: 14px; margin-top: 4px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+  h2 { font-size: 17px; margin: 0; letter-spacing: -.3px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .actions { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 18px; }
+  .action { border: 1px solid var(--line); background: white; border-radius: 13px; padding: 14px 7px; cursor: pointer; color: var(--ink); font: inherit; font-size: 12px; font-weight: 700; transition: .15s; }
+  .action:hover { border-color: #a9c2ff; background: #f7f9ff; transform: translateY(-1px); }
+  .action-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; margin: 0 auto 9px; background: var(--pale); color: var(--blue); font-size: 18px; }
+  .right-stack { display: grid; gap: 18px; align-content: start; }
+  .savings-amount { font-size: 25px; font-weight: 800; margin: 8px 0 14px; }
+  .progress-track { background: #eaf0fa; height: 8px; border-radius: 20px; overflow: hidden; }
+  .progress-fill { background: var(--blue); height: 100%; width: 45%; border-radius: 20px; transition: width .2s; }
+  .progress-meta { display: flex; justify-content: space-between; margin-top: 9px; font-size: 11px; color: var(--muted); }
+  .transaction-list { display: grid; }
+  .transaction { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid #edf0f5; }
+  .transaction:last-child { border-bottom: 0; padding-bottom: 0; }
+  .tx-icon { width: 39px; height: 39px; display: grid; place-items: center; background: #f0f4fb; border-radius: 12px; font-size: 17px; flex-shrink: 0; }
+  .tx-details { flex: 1; min-width: 0; }
+  .tx-details strong { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tx-details small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+  .tx-amount { font-size: 13px; font-weight: 800; white-space: nowrap; }
+  .negative { color: var(--red); }
+  .positive { color: var(--green); }
+  .primary { border: 0; border-radius: 10px; padding: 11px 15px; background: var(--blue); color: white; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .primary:hover { background: #1c52cc; }
+  .secondary { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: white; color: var(--ink); font-weight: 700; cursor: pointer; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 7px; }
+  input, select { width: 100%; border: 1px solid #dbe2ed; border-radius: 10px; padding: 12px; background: white; color: var(--ink); font: inherit; font-size: 14px; outline: none; }
+  input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #2864e81c; }
+  .field { margin-bottom: 15px; }
+  .notice { font-size: 12px; line-height: 1.5; color: var(--muted); margin-top: 13px; }
+  .feedback { display: none; margin-top: 12px; padding: 11px 12px; border-radius: 10px; font-size: 13px; line-height: 1.45; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #e8f8f0; color: #116443; }
+  .feedback.error { background: #fff0f0; color: #a32929; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .view-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(260px,.8fr); gap: 18px; }
+  .empty { color: var(--muted); font-size: 13px; padding: 18px 0 4px; }
+  footer { text-align: center; color: var(--muted); font-size: 11px; padding: 25px 0 5px; }
+  @media (max-width: 800px) {
+    .app { grid-template-columns: 1fr; }
+    aside { padding: 15px; }
+    .brand { padding: 0 5px 14px; }
+    .nav { flex-direction: row; overflow-x: auto; }
+    .nav button { white-space: nowrap; padding: 10px; }
+    .nav-label, .side-bottom { display: none; }
+    main { padding: 22px 15px; }
+    .grid, .view-layout { grid-template-columns: 1fr; }
+    .actions { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .card { padding: 18px; }
+  }
+  @media (max-width: 420px) {
+    .profile div:not(.avatar) { display: none; }
+    .actions { grid-template-columns: repeat(2,1fr); }
+    .form-grid { grid-template-columns: 1fr; gap: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-note">DEMO ACCOUNT · FICTIONAL MONEY ONLY · NO REAL BANKING TRANSACTIONS</div>
+<div class="app">
+  <aside>
+    <div class="brand"><span class="brand-mark">M</span> MeCash</div>
+    <div class="nav-label">Workspace</div>
+    <nav class="nav" aria-label="Main navigation">
+      <button class="active" data-view="dashboard">▦ &nbsp; Dashboard</button>
+      <button data-view="payments">↗ &nbsp; Payments</button>
+      <button data-view="savings">◎ &nbsp; My Savings</button>
+      <button data-view="transactions">↻ &nbsp; Transactions</button>
+    </nav>
+    <div class="side-bottom">Smarter money management.<br><strong>MeCash demo environment</strong></div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">MONDAY · YOUR FINANCIAL OVERVIEW</div>
+        <h1 id="pageTitle">Welcome back, Alex</h1>
+      </div>
+      <div class="profile"><div class="avatar">AC</div><div><strong>Alex Cruz</strong><small>Demo account</small></div></div>
+    </header>
+
+    <section class="view active" id="dashboard">
+      <div class="grid">
+        <div>
+          <div class="card balance-card">
+            <div class="balance-label">Total available balance</div>
+            <div class="balance-amount" id="balance">₱24,850.00</div>
+            <div class="balance-footer">
+              <div>ACCOUNT TYPE<strong>MeCash Everyday</strong></div>
+              <div>ACCOUNT NUMBER<strong>•••• 2048</strong></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="action" data-go="payments"><span class="action-icon">↗</span>Pay / Transfer</button>
+            <button class="action" data-go="savings"><span class="action-icon">◎</span>Add Savings</button>
+            <button class="action" data-go="transactions"><span class="action-icon">↻</span>Activity</button>
+            <button class="action" data-go="payments"><span class="action-icon">＋</span>Demo Payment</button>
+          </div>
+          <div class="card" style="margin-top:18px">
+            <div class="section-head"><h2>Recent transactions</h2><button class="secondary" data-go="transactions">View all</button></div>
+            <div class="transaction-list" id="recentTransactions"></div>
+          </div>
+        </div>
+        <div class="right-stack">
+          <div class="card">
+            <div class="section-head"><h2>Savings goal</h2><span class="muted">Demo</span></div>
+            <div class="muted" id="goalName">New laptop</div>
+            <div class="savings-amount" id="savingsAmount">₱4,500.00</div>
+            <div class="progress-track"><div class="progress-fill" id="savingsProgress"></div></div>
+            <div class="progress-meta"><span id="savingsPercent">45% saved</span><span id="goalTarget">Goal: ₱10,000</span></div>
+            <button class="primary" style="width:100%;margin-top:18px" data-go="savings">Manage savings goal</button>
+          </div>
+          <div class="card">
+            <div class="section-head"><h2>Quick insight</h2><span>✦</span></div>
+            <p style="font-size:13px;line-height:1.65;margin:0;color:#53617a">Small, regular deposits can help you build toward a goal. Try adding a demo deposit in <strong>My Savings</strong> and watch your progress update.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="payments">
+      <div class="view-layout">
+        <div class="card">
+          <div class="section-head"><h2>Make a demo payment</h2><span class="muted">Simulated only</span></div>
+          <form id="paymentForm">
+            <div class="field"><label for="recipient">Recipient / Merchant</label><input id="recipient" required maxlength="45" placeholder="e.g. Campus Bookstore"></div>
+            <div class="form-grid">
+              <div class="field"><label for="paymentType">Payment type</label><select id="paymentType"><option>Online purchase</option><option>School fees</option><option>Food & drinks</option><option>Bill payment</option><option>Transfer to friend</option></select></div>
+              <div class="field"><label for="paymentAmount">Amount (PHP)</label><input id="paymentAmount" type="number" min="1" max="24850" step="0.01" required placeholder="250.00"></div>
+            </div>
+            <button class="primary" type="submit">Confirm demo payment</button>
+            <div id="paymentFeedback" class="feedback" role="status"></div>
+            <p class="notice">This only changes fictional data in this demo page. No money is sent and no real account is connected.</p>
+          </form>
+        </div>
+        <div class="card">
+          <h2 style="margin-bottom:15px">Before you confirm</h2>
+          <div class="muted">Available demo balance</div>
+          <div class="savings-amount" id="paymentBalance">₱24,850.00</div>
+          <div class="muted" style="line-height:1.6">Enter a recipient, choose a category, and set an amount. If the amount is valid and within your sample balance, the demo will record the payment and update your dashboard.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="savings">
+      <div class="view-layout">
+        <div class="card">
+          <div class="section-head"><h2>Manage your savings</h2><span class="muted">Demo goal</span></div>
+          <div class="muted">Goal: New laptop</div>
+          <div class="savings-amount" id="savingsAmountLarge">₱4,500.00</div>
+          <div class="progress-track"><div class="progress-fill" id="savingsProgressLarge"></div></div>
+          <div class="progress-meta"><span id="savingsPercentLarge">45% saved</span><span id="goalTargetLarge">Goal: ₱10,000</span></div>
+          <form id="savingsForm" style="margin-top:24px">
+            <div class="field"><label for="depositAmount">Add to savings (PHP)</label><input id="depositAmount" type="number" min="1" step="0.01" required placeholder="500.00"></div>
+            <button class="primary" type="submit">Add demo deposit</button>
+            <div id="savingsFeedback" class="feedback" role="status"></div>
+          </form>
+          <p class="notice">Deposits move fictional money from your available balance into your savings goal. No real account is involved.</p>
+        </div>
+        <div class="card">
+          <div class="section-head"><h2>Goal details</h2><span>◎</span></div>
+          <div class="field"><label for="goalTargetInput">Savings target (PHP)</label><input id="goalTargetInput" type="number" min="1" step="1" value="10000"></div>
+          <div class="field"><label for="goalNameInput">Goal name</label><input id="goalNameInput" maxlength="35" value="New laptop"></div>
+          <button class="secondary" id="updateGoal" type="button">Update goal</button>
+          <div id="goalFeedback" class="feedback" role="status"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="transactions">
+      <div class="card">
+        <div class="section-head"><h2>Transaction history</h2><span class="muted">Newest first</span></div>
+        <div class="transaction-list" id="allTransactions"></div>
+        <p class="notice">All entries are sample transactions or actions created in this browser demo.</p>
+      </div>
+    </section>
+    <footer>MeCash is a fictional school-project demo. It is not a real bank and does not handle real money.</footer>
+  </main>
+</div>
+<script>
+(() => {
+  let balance = 24850;
+  let savings = 4500;
+  let goalTarget = 10000;
+  let goalName = "New laptop";
+  let transactions = [
+    { name: "Campus Bookstore", type: "Online purchase", amount: -485, date: "Today · 10:42 AM" },
+    { name: "Savings deposit", type: "Savings", amount: -500, date: "Yesterday · 4:15 PM", note: "Moved to savings" },
+    { name: "Monthly allowance", type: "Money received", amount: 5000, date: "Oct 08 · 9:00 AM" }
+  ];
+  const peso = n => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(n);
+  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+  function transactionHtml(t) {
+    const incoming = t.amount > 0;
+    const icon = incoming ? "↓" : (t.type === "Savings" ? "◎" : "↗");
+    return `<div class="transaction"><div class="tx-icon">${icon}</div><div class="tx-details"><strong>${escapeHtml(t.name)}</strong><small>${escapeHtml(t.type)} · ${escapeHtml(t.date)}</small></div><div class="tx-amount ${incoming ? "positive" : "negative"}">${incoming ? "+" : "−"}${peso(Math.abs(t.amount))}</div></div>`;
+  }
+  function render() {
+    document.getElementById("balance").textContent = peso(balance);
+    document.getElementById("paymentBalance").textContent = peso(balance);
+    document.getElementById("savingsAmount").textContent = peso(savings);
+    document.getElementById("savingsAmountLarge").textContent = peso(savings);
+    document.getElementById("goalName").textContent = goalName;
+    document.getElementById("goalTarget").textContent = "Goal: " + peso(goalTarget);
+    document.getElementById("goalTargetLarge").textContent = "Goal: " + peso(goalTarget);
+    const pct = Math.min(100, Math.round(savings / goalTarget * 100));
+    document.getElementById("savingsProgress").style.width = pct + "%";
+    document.getElementById("savingsProgressLarge").style.width = pct + "%";
+    document.getElementById("savingsPercent").textContent = pct + "% saved";
+    document.getElementById("savingsPercentLarge").textContent = pct + "% saved";
+    document.getElementById("recentTransactions").innerHTML = transactions.slice(0, 4).map(transactionHtml).join("");
+    document.getElementById("allTransactions").innerHTML = transactions.length ? transactions.map(transactionHtml).join("") : '<div class="empty">No transactions yet.</div>';
+  }
+  function feedback(id, message, ok) {
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.className = "feedback show " + (ok ? "ok" : "error");
+  }
+  function go(view) {
+    document.querySelectorAll(".view").forEach(el => el.classList.toggle("active", el.id === view));
+    document.querySelectorAll(".nav button").forEach(el => el.classList.toggle("active", el.dataset.view === view));
+    const titles = { dashboard: "Welcome back, Alex", payments: "Payments & transfers", savings: "Your savings goals", transactions: "Transaction history" };
+    document.getElementById("pageTitle").textContent = titles[view] || "MeCash";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  document.querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", () => go(btn.dataset.view)));
+  document.querySelectorAll("[data-go]").forEach(btn => btn.addEventListener("click", () => go(btn.dataset.go)));
+  document.getElementById("paymentForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const recipient = document.getElementById("recipient").value.trim();
+    const type = document.getElementById("paymentType").value;
+    const amount = Number(document.getElementById("paymentAmount").value);
+    if (!recipient) return feedback("paymentFeedback", "Enter a recipient or merchant.", false);
+    if (!Number.isFinite(amount) || amount <= 0) return feedback("paymentFeedback", "Enter an amount greater than zero.", false);
+    if (amount > balance) return feedback("paymentFeedback", "Insufficient demo balance. Try a smaller amount.", false);
+    balance = Math.round((balance - amount) * 100) / 100;
+    transactions.unshift({ name: recipient, type, amount: -amount, date: "Just now" });
+    render();
+    feedback("paymentFeedback", `Demo payment successful! ${peso(amount)} was simulated for ${recipient}. No real money moved.`, true);
+    e.target.reset();
+  });
+  document.getElementById("savingsForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const amount = Number(document.getElementById("depositAmount").value);
+    if (!Number.isFinite(amount) || amount <= 0) return feedback("savingsFeedback", "Enter a deposit greater than zero.", false);
+    if (amount > balance) return feedback("savingsFeedback", "Insufficient demo balance. Try a smaller deposit.", false);
+    balance = Math.round((balance - amount) * 100) / 100;
+    savings = Math.round((savings + amount) * 100) / 100;
+    transactions.unshift({ name: "Deposit to " + goalName, type: "Savings", amount: -amount, date: "Just now" });
+    render();
+    feedback("savingsFeedback", `${peso(amount)} added to your ${goalName} goal. Your demo balance and savings progress have updated.`, true);
+    e.target.reset();
+  });
+  document.getElementById("updateGoal").addEventListener("click", () => {
+    const target = Number(document.getElementById("goalTargetInput").value);
+    const name = document.getElementById("goalNameInput").value.trim();
+    if (!Number.isFinite(target) || target <= 0) return feedback("goalFeedback", "Enter a goal target greater than zero.", false);
+    if (!name) return feedback("goalFeedback", "Enter a name for your savings goal.", false);
+    goalTarget = target;
+    goalName = name;
+    render();
+    feedback("goalFeedback", "Savings goal updated.", true);
+  });
+  render();
+})();
+</script>
+</body>
+</html>
